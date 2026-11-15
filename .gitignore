@@ -1,0 +1,8 @@
+# Build artifacts
+*.exe
+*.o
+*.obj
+
+# Editor & build directories
+.vscode/
+output/
