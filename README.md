@@ -1,6 +1,6 @@
 # CSMA/CD & CSMA/CA Console Simulation
 
-A standalone, single-file C++ console program demonstrating **Carrier Sense Multiple Access** (CSMA) protocols without requiring CMake, batch files, or any external dependencies.
+A standalone, single-file C console program demonstrating **Carrier Sense Multiple Access** (CSMA) protocols without requiring CMake, batch files, or any external dependencies.
 
 Protocols simulated:
 1. **CSMA/CD** (*Collision Detection* — IEEE 802.3 Ethernet)
@@ -29,23 +29,23 @@ Protocols simulated:
 
 ## How to Compile & Run
 
-This project consists of only `main.cpp` using the C++ Standard Library. You can compile it directly with any standard C++ compiler:
+This project consists of only `main.c` using the standard C library (`stdio.h`, `stdlib.h`, `time.h`, `stdbool.h`). You can compile it directly with any standard C compiler:
 
 ### GCC / MinGW (Windows / Linux)
 ```bash
-g++ main.cpp -o csma_sim
+gcc main.c -o csma_sim
 ./csma_sim
 ```
-*(On Windows Command Prompt: `g++ main.cpp -o csma_sim.exe` followed by `csma_sim.exe`)*
+*(On Windows Command Prompt: `gcc main.c -o csma_sim.exe` followed by `csma_sim.exe`)*
 
 ### Clang
 ```bash
-clang++ main.cpp -o csma_sim
+clang main.c -o csma_sim
 ./csma_sim
 ```
 
 ### MSVC (Visual Studio Developer Command Prompt)
 ```cmd
-cl /EHsc main.cpp
+cl main.c
 main.exe
 ```
