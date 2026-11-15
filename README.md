@@ -1,51 +1,90 @@
-# CSMA/CD & CSMA/CA Console Simulation
+# CSMA, CSMA/CD, and CSMA/CA Simulation in Pure C
 
-A standalone, single-file C console program demonstrating **Carrier Sense Multiple Access** (CSMA) protocols without requiring CMake, batch files, or any external dependencies.
-
-Protocols simulated:
-1. **CSMA/CD** (*Collision Detection* — IEEE 802.3 Ethernet)
-2. **CSMA/CA** (*Collision Avoidance* — IEEE 802.11 Wi-Fi)
+An educational Computer Networks mini-project demonstrating **Carrier Sense Multiple Access (CSMA)** protocols in a single, clean C source file without external dependencies.
 
 ---
 
-## Key Protocols Explained
+## Project Structure
 
-### 1. CSMA/CD (Listen-While-Talk)
-- **Carrier Sensing**: Stations check if the shared bus is idle before transmitting.
-- **Collision Detection**: If two stations transmit simultaneously, both detect the collision.
-- **Jam Signal & Truncated Binary Exponential Backoff (BEB)**:
-  - Transmission is aborted immediately, and a jamming signal is broadcasted.
-  - Stations choose a random backoff slot:
-    $$R \in [0, 2^{\min(k, 10)} - 1]$$
-  - Stations wait $R$ slots before re-attempting transmission.
-
-### 2. CSMA/CA (Avoid-Before-Talk)
-- **Inter-Frame Spaces (DIFS / SIFS)**: Stations sense the wireless medium idle for a Distributed Inter-Frame Space (DIFS) before initiating countdown.
-- **Slotted Backoff Countdown**: Each station chooses a random backoff slot within its Contention Window ($CW$).
-- **Timer Freezing**: When another station transmits, all other stations **freeze** their backoff counters and resume only after the medium is sensed idle again.
-- **Acknowledgements (ACK)**: The receiver returns an ACK frame after a Short Inter-Frame Space (SIFS). If no ACK is received (collision/timeout), $CW$ doubles.
+This project contains only two files:
+- `csma_simulation.c` – Complete C source code containing all three protocol simulations and an automated demo runner.
+- `README.md` – Documentation, theoretical principles, and usage instructions.
 
 ---
 
-## How to Compile & Run
+## Protocols Simulated
 
-This project consists of only `main.c` using the standard C library (`stdio.h`, `stdlib.h`, `time.h`, `stdbool.h`). You can compile it directly with any standard C compiler:
+### 1. Pure CSMA (1-Persistent)
+- **Carrier Sensing**: A station monitors the shared medium before transmitting.
+- **Rule**:
+  - If the medium is **IDLE**: Transmit immediately (probability $p = 1$).
+  - If the medium is **BUSY**: Continuously listen until the channel becomes IDLE, then transmit immediately ($p = 1$).
+- **Vulnerability**: If multiple stations queue up while the channel is busy, they all transmit simultaneously the moment the medium frees, causing a guaranteed **collision**.
 
-### GCC / MinGW (Windows / Linux)
+### 2. CSMA/CD (Collision Detection — IEEE 802.3 Ethernet)
+- **Listen-While-Talk**: Stations continuously monitor voltage levels on the wire while transmitting.
+- **Immediate Abortion & Jam Signal**: The moment overlapping signals are detected, transmission is aborted immediately to avoid wasting channel time, and a 32-bit **Jam signal** is broadcast to notify all nodes.
+- **Truncated Binary Exponential Backoff (BEB)**:
+  - Colliding nodes choose a random wait slot:
+    $$R \in [0, 2^k - 1]$$
+    where $k$ is the collision attempt number.
+  - The node with the smaller backoff re-senses first, finds the channel idle, and successfully delivers its frame.
+
+### 3. CSMA/CA (Collision Avoidance — IEEE 802.11 Wi-Fi)
+- **Avoid-Before-Talk**: Wireless radios cannot easily listen while transmitting (half-duplex RF and hidden-terminal problem).
+- **Inter-Frame Spaces (DIFS / SIFS)**: Stations verify the channel remains clear for a DIFS duration before beginning countdown.
+- **Random Backoff**: Stations count down a randomized slot timer from the Contention Window (CW).
+- **Simplified RTS/CTS Handshake**:
+  1. **RTS (Request to Send)**: Sender reserves the medium with a small control frame.
+  2. **CTS (Clear to Send)**: Receiver confirms reservation; hidden nodes overhear CTS and set their NAV (Network Allocation Vector) timer to remain silent.
+  3. **DATA**: Sent safely without collisions.
+  4. **ACK (Acknowledgment)**: Receiver confirms delivery after SIFS.
+
+---
+
+## Compilation
+
+Compile with any standard C99/C11 compiler (GCC, Clang, or MSVC):
+
+### GCC (Linux / macOS / Windows MinGW)
 ```bash
-gcc main.c -o csma_sim
-./csma_sim
+gcc csma_simulation.c -o csma_sim
 ```
-*(On Windows Command Prompt: `gcc main.c -o csma_sim.exe` followed by `csma_sim.exe`)*
 
 ### Clang
 ```bash
-clang main.c -o csma_sim
-./csma_sim
+clang csma_simulation.c -o csma_sim
 ```
 
-### MSVC (Visual Studio Developer Command Prompt)
-```cmd
-cl main.c
-main.exe
+---
+
+## Running the Simulation
+
+### Interactive Menu
+```bash
+./csma_sim
+```
+*(On Windows PowerShell / CMD: `.\csma_sim.exe`)*
+
+### Quick All-in-One Demo
+Run the automated step-by-step demonstration of all three protocols directly:
+```bash
+./csma_sim --demo
+```
+*(On Windows: `.\csma_sim.exe --demo`)*
+
+---
+
+## Interactive Menu Overview
+
+```text
+======================================================
+           CSMA / CD / CA CONSOLE SIMULATOR           
+======================================================
+1. Run Full Demo (All 3 Protocols sequentially)
+2. Simulate Pure CSMA (1-Persistent)
+3. Simulate CSMA/CD (Collision Detection)
+4. Simulate CSMA/CA (Collision Avoidance & RTS/CTS)
+5. Exit
+Enter your choice (1-5):
 ```
