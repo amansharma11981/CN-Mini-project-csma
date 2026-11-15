@@ -1,0 +1,11 @@
+# Binaries and executables
+*.exe
+*.out
+*.app
+*.o
+*.obj
+
+# Debug files
+*.dSYM/
+*.pdb
+*.ilk
