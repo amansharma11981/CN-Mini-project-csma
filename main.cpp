@@ -217,31 +217,6 @@ void simulateCSMACA() {
 }
 
 // ============================================================================
-// 3. Persistence Methods Guide
-// ============================================================================
-void explainPersistence() {
-    cout << "\n============================================\n";
-    cout << "         CSMA PERSISTENCE METHODS           \n";
-    cout << "============================================\n";
-    cout << "1. 1-Persistent CSMA:\n"
-         << "   - Senses channel continuously.\n"
-         << "   - If IDLE: Transmits immediately (probability = 1).\n"
-         << "   - If BUSY: Keeps sensing until idle, then transmits immediately.\n"
-         << "   - Note: High collision chance if multiple stations are waiting.\n\n"
-         << "2. Non-Persistent CSMA:\n"
-         << "   - Senses channel.\n"
-         << "   - If IDLE: Transmits immediately.\n"
-         << "   - If BUSY: Waits a random backoff time before sensing again.\n"
-         << "   - Note: Reduces collisions, but channel may remain idle longer.\n\n"
-         << "3. p-Persistent CSMA (Used in slotted channels):\n"
-         << "   - Senses channel.\n"
-         << "   - If IDLE: Transmits with probability 'p'; waits next slot with (1-p).\n"
-         << "   - If BUSY: Waits until idle and repeats the test.\n"
-         << "   - Note: Balances throughput and collision probability.\n"
-         << "============================================\n";
-}
-
-// ============================================================================
 // Main Interactive Menu
 // ============================================================================
 int main() {
@@ -254,20 +229,18 @@ int main() {
              << "====================================\n"
              << "1. Simulate CSMA/CD (Collision Detection)\n"
              << "2. Simulate CSMA/CA (Collision Avoidance)\n"
-             << "3. View CSMA Persistence Methods\n"
-             << "4. Exit\n"
-             << "Enter your choice (1-4): ";
+             << "3. Exit\n"
+             << "Enter your choice (1-3): ";
 
         if (!(cin >> choice)) break;
 
         if (choice == 1)      simulateCSMACD();
         else if (choice == 2) simulateCSMACA();
-        else if (choice == 3) explainPersistence();
-        else if (choice == 4) {
+        else if (choice == 3) {
             cout << "\nExiting. Thank you!\n";
             break;
         } else {
-            cout << "Invalid choice! Please enter a number between 1 and 4.\n";
+            cout << "Invalid choice! Please enter a number between 1 and 3.\n";
         }
     }
 
