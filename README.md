@@ -1,77 +1,68 @@
 # CSMA, CSMA/CD, and CSMA/CA Simulation in Pure C
 
-An educational Computer Networks mini-project demonstrating **Carrier Sense Multiple Access (CSMA)** protocols in a single, clean C source file without external dependencies.
+An educational Computer Networks mini-project demonstrating **Carrier Sense Multiple Access (CSMA)** protocols in pure C with **complete user control** over simulation parameters.
 
 ---
 
 ## Project Structure
 
 This project contains only two files:
-- `csma_simulation.c` – Complete C source code containing all three protocol simulations and an automated demo runner.
+- `csma_simulation.c` – Standalone C source code containing all three protocol simulations, interactive user configuration, and an automated demo runner.
 - `README.md` – Documentation, theoretical principles, and usage instructions.
 
 ---
 
-## Protocols Simulated
+## Features & User Control
 
 ### 1. Pure CSMA (1-Persistent)
-- **Carrier Sensing**: A station monitors the shared medium before transmitting.
-- **Rule**:
-  - If the medium is **IDLE**: Transmit immediately (probability $p = 1$).
-  - If the medium is **BUSY**: Continuously listen until the channel becomes IDLE, then transmit immediately ($p = 1$).
-- **Vulnerability**: If multiple stations queue up while the channel is busy, they all transmit simultaneously the moment the medium frees, causing a guaranteed **collision**.
+- **Concept**: Sense medium; if idle, transmit immediately ($p = 1$). If busy, continuously listen and transmit immediately when free.
+- **User Control**:
+  - Number of competing stations ($2$ to $6$).
+  - Transmission duration in time slots.
+  - Optional step-by-step mode.
+- **Demonstration**: Shows how stations queueing up during a busy transmission collide as soon as the channel frees.
 
 ### 2. CSMA/CD (Collision Detection — IEEE 802.3 Ethernet)
-- **Listen-While-Talk**: Stations continuously monitor voltage levels on the wire while transmitting.
-- **Immediate Abortion & Jam Signal**: The moment overlapping signals are detected, transmission is aborted immediately to avoid wasting channel time, and a 32-bit **Jam signal** is broadcast to notify all nodes.
-- **Truncated Binary Exponential Backoff (BEB)**:
-  - Colliding nodes choose a random wait slot:
-    $$R \in [0, 2^k - 1]$$
-    where $k$ is the collision attempt number.
-  - The node with the smaller backoff re-senses first, finds the channel idle, and successfully delivers its frame.
+- **Concept**: Listen-while-talk, instant transmission abortion, 32-bit Jam signal, and Truncated Binary Exponential Backoff ($R \in [0, 2^k - 1]$).
+- **User Control**:
+  - Number of contending stations ($2$ to $6$).
+  - Max collision retry attempts ($3$ to $16$).
+  - Slot time in milliseconds.
+  - Optional step-by-step mode.
+- **Demonstration**: Shows simultaneous transmission, collision detection, jamming, and how backoff slots desynchronize nodes.
 
 ### 3. CSMA/CA (Collision Avoidance — IEEE 802.11 Wi-Fi)
-- **Avoid-Before-Talk**: Wireless radios cannot easily listen while transmitting (half-duplex RF and hidden-terminal problem).
-- **Inter-Frame Spaces (DIFS / SIFS)**: Stations verify the channel remains clear for a DIFS duration before beginning countdown.
-- **Random Backoff**: Stations count down a randomized slot timer from the Contention Window (CW).
-- **Simplified RTS/CTS Handshake**:
-  1. **RTS (Request to Send)**: Sender reserves the medium with a small control frame.
-  2. **CTS (Clear to Send)**: Receiver confirms reservation; hidden nodes overhear CTS and set their NAV (Network Allocation Vector) timer to remain silent.
-  3. **DATA**: Sent safely without collisions.
-  4. **ACK (Acknowledgment)**: Receiver confirms delivery after SIFS.
+- **Concept**: Avoid-before-talk, DIFS sensing, Contention Window backoff countdown, simplified RTS/CTS reservation, SIFS, and ACK confirmation.
+- **User Control**:
+  - Number of wireless stations ($2$ to $5$).
+  - Contention Window size ($CW \in [4, 32]$).
+  - Enable / Disable RTS/CTS reservation handshake.
+  - Optional step-by-step mode.
+- **Demonstration**: Shows how small RTS/CTS frames protect large data frames from collision and address the hidden-terminal problem using NAV.
+
+### 4. Automated All-in-One Demo
+- Runs all three protocols sequentially using standard defaults for quick demonstration and laboratory evaluation.
 
 ---
 
-## Compilation
+## How to Compile & Run
 
-Compile with any standard C99/C11 compiler (GCC, Clang, or MSVC):
-
-### GCC (Linux / macOS / Windows MinGW)
+### Compile
+Compile with any standard C99/C11 compiler:
 ```bash
 gcc csma_simulation.c -o csma_sim
 ```
 
-### Clang
-```bash
-clang csma_simulation.c -o csma_sim
+### Run Interactive Menu
+```powershell
+.\csma_sim.exe
 ```
+*(On Linux/macOS: `./csma_sim`)*
 
----
-
-## Running the Simulation
-
-### Interactive Menu
-```bash
-./csma_sim
+### Run Automated Demo Directly
+```powershell
+.\csma_sim.exe --demo
 ```
-*(On Windows PowerShell / CMD: `.\csma_sim.exe`)*
-
-### Quick All-in-One Demo
-Run the automated step-by-step demonstration of all three protocols directly:
-```bash
-./csma_sim --demo
-```
-*(On Windows: `.\csma_sim.exe --demo`)*
 
 ---
 
@@ -81,10 +72,12 @@ Run the automated step-by-step demonstration of all three protocols directly:
 ======================================================
            CSMA / CD / CA CONSOLE SIMULATOR           
 ======================================================
-1. Run Full Demo (All 3 Protocols sequentially)
-2. Simulate Pure CSMA (1-Persistent)
-3. Simulate CSMA/CD (Collision Detection)
-4. Simulate CSMA/CA (Collision Avoidance & RTS/CTS)
+1. Run Full Demo (All 3 Protocols with default params)
+2. Simulate Pure CSMA (1-Persistent) [User Controlled]
+3. Simulate CSMA/CD (Collision Detection) [User Controlled]
+4. Simulate CSMA/CA (Collision Avoidance & RTS/CTS) [User Controlled]
 5. Exit
-Enter your choice (1-5):
+Enter your choice [1-5] (default 1):
 ```
+
+At any prompt, you can press **Enter** to accept the sensible default value or type a custom value to test different network conditions.
