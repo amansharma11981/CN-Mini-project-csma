@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <string>
 
 using namespace std;
 
@@ -38,7 +39,7 @@ vector<int> getReadyStations(const vector<Station>& stations) {
     vector<int> ready;
     for (size_t i = 0; i < stations.size(); i++) {
         if (stations[i].active && !stations[i].transmitted && stations[i].backoffSlots == 0) {
-            ready.push_back(i);
+            ready.push_back(static_cast<int>(i));
         }
     }
     return ready;
@@ -75,7 +76,7 @@ void printResults(const string& title, const vector<Station>& stations, int coll
     for (const auto& st : stations) {
         if (st.transmitted) successful++;
     }
-    int total = stations.size();
+    int total = static_cast<int>(stations.size());
 
     cout << "\n============================================\n";
     cout << "           " << title << " RESULTS                  \n";
@@ -90,7 +91,119 @@ void printResults(const string& title, const vector<Station>& stations, int coll
 }
 
 // ============================================================================
-// 1. CSMA/CD (Collision Detection — IEEE 802.3 Ethernet)
+// 1. Regular CSMA (Carrier Sense Multiple Access - Listen Before Talk)
+// ============================================================================
+void simulateCSMA() {
+    cout << "\n============================================\n";
+    cout << "          REGULAR CSMA SIMULATION           \n";
+    cout << "  Principle: Listen Before Talk (No CD/CA)  \n";
+    cout << "============================================\n";
+
+    int n = getIntInput("Enter number of stations (2 to 10): ", 2, 10, 4);
+    int maxRetries = getIntInput("Enter max collision attempts (default 10): ", 1, 16, 10);
+
+    cout << "\nSelect Persistence Strategy:\n"
+         << "  1. 1-Persistent    (Transmit immediately with p=1 when idle)\n"
+         << "  2. Non-Persistent  (If medium is busy, wait random backoff)\n"
+         << "  3. p-Persistent    (Transmit with probability p when idle)\n";
+    int mode = getIntInput("Choose mode (1-3, default 1): ", 1, 3, 1);
+
+    double pVal = 0.5;
+    if (mode == 3) {
+        cout << "Enter transmission probability p (0.1 to 1.0, default 0.5): ";
+        double userP;
+        if (cin >> userP && userP >= 0.1 && userP <= 1.0) {
+            pVal = userP;
+        } else {
+            cin.clear();
+            string dummy;
+            cin >> dummy;
+            pVal = 0.5;
+        }
+    }
+
+    vector<Station> stations = initStations(n);
+    int slot = 1, completed = 0, collisions = 0;
+
+    string modeTitle = (mode == 1) ? "1-Persistent" : (mode == 2 ? "Non-Persistent" : "p-Persistent");
+    cout << "\n--- Starting Regular CSMA (" << modeTitle << ") Simulation ---\n";
+
+    while (completed < n && slot <= 50) {
+        cout << "\n[Time Slot " << slot << "]\n";
+        vector<int> ready = getReadyStations(stations);
+
+        // In p-Persistent mode, ready stations decide whether to transmit this slot
+        if (mode == 3 && !ready.empty()) {
+            vector<int> transmitting;
+            for (int idx : ready) {
+                double roll = static_cast<double>(rand()) / RAND_MAX;
+                if (roll <= pVal) {
+                    transmitting.push_back(idx);
+                } else {
+                    cout << "  Station " << stations[idx].id << " sensed idle but deferred (roll > p). Waiting 1 slot.\n";
+                    stations[idx].backoffSlots = 1;
+                }
+            }
+            ready = transmitting;
+        }
+
+        if (ready.empty()) {
+            cout << "  Channel Status: IDLE (Stations sensing or waiting in backoff)\n";
+        } else if (ready.size() == 1) {
+            int idx = ready[0];
+            stations[idx].transmitted = true;
+            stations[idx].active = false;
+            completed++;
+            cout << "  Channel Status: SUCCESS\n"
+                 << "  --> Station " << stations[idx].id << " sensed channel IDLE and successfully transmitted its frame!\n";
+        } else {
+            collisions++;
+            cout << "  Channel Status: COLLISION!\n"
+                 << "  --> Simultaneous transmission by: ";
+            for (int idx : ready) cout << "Station " << stations[idx].id << " ";
+            cout << "\n  --> Note: Regular CSMA has NO collision detection during transmission.\n"
+                 << "  --> Entire frame duration wasted; timeout occurs; stations back off:\n";
+
+            for (int idx : ready) {
+                stations[idx].attempts++;
+                int k = stations[idx].attempts;
+
+                if (k > maxRetries) {
+                    cout << "  [!] Station " << stations[idx].id << " reached max retries (" 
+                         << maxRetries << "). Frame DROPPED.\n";
+                    stations[idx].active = false;
+                    completed++;
+                } else {
+                    int maxR = (1 << min(k, 6)); // backoff range
+                    int r = 1 + (rand() % maxR);
+                    stations[idx].backoffSlots = r;
+
+                    cout << "      Station " << stations[idx].id << " (Attempt " << k 
+                         << "): Waiting random backoff R = " << r << " slots\n";
+                }
+            }
+        }
+
+        // For Non-Persistent mode: if medium was busy/collided, any waiting station backs off randomly
+        if (mode == 2 && !ready.empty()) {
+            for (auto& st : stations) {
+                if (st.active && !st.transmitted && st.backoffSlots == 0 && find(ready.begin(), ready.end(), st.id - 1) == ready.end()) {
+                    st.backoffSlots = 1 + (rand() % 4);
+                    cout << "      Station " << st.id << " sensed channel BUSY -> Non-persistent backoff: " 
+                         << st.backoffSlots << " slots\n";
+                }
+            }
+        }
+
+        decrementBackoffs(stations);
+        slot++;
+    }
+
+    printResults("Regular CSMA (" + modeTitle + ")", stations, collisions, slot - 1);
+}
+
+// ============================================================================
+// 2. CSMA/CD (Collision Detection — IEEE 802.3 Ethernet)
 // ============================================================================
 void simulateCSMACD() {
     cout << "\n============================================\n";
@@ -153,7 +266,7 @@ void simulateCSMACD() {
 }
 
 // ============================================================================
-// 2. CSMA/CA (Collision Avoidance — IEEE 802.11 Wi-Fi)
+// 3. CSMA/CA (Collision Avoidance — IEEE 802.11 Wi-Fi)
 // ============================================================================
 void simulateCSMACA() {
     cout << "\n============================================\n";
@@ -217,52 +330,27 @@ void simulateCSMACA() {
 }
 
 // ============================================================================
-// 3. Persistence Methods Guide
-// ============================================================================
-void explainPersistence() {
-    cout << "\n============================================\n";
-    cout << "         CSMA PERSISTENCE METHODS           \n";
-    cout << "============================================\n";
-    cout << "1. 1-Persistent CSMA:\n"
-         << "   - Senses channel continuously.\n"
-         << "   - If IDLE: Transmits immediately (probability = 1).\n"
-         << "   - If BUSY: Keeps sensing until idle, then transmits immediately.\n"
-         << "   - Note: High collision chance if multiple stations are waiting.\n\n"
-         << "2. Non-Persistent CSMA:\n"
-         << "   - Senses channel.\n"
-         << "   - If IDLE: Transmits immediately.\n"
-         << "   - If BUSY: Waits a random backoff time before sensing again.\n"
-         << "   - Note: Reduces collisions, but channel may remain idle longer.\n\n"
-         << "3. p-Persistent CSMA (Used in slotted channels):\n"
-         << "   - Senses channel.\n"
-         << "   - If IDLE: Transmits with probability 'p'; waits next slot with (1-p).\n"
-         << "   - If BUSY: Waits until idle and repeats the test.\n"
-         << "   - Note: Balances throughput and collision probability.\n"
-         << "============================================\n";
-}
-
-// ============================================================================
 // Main Interactive Menu
 // ============================================================================
 int main() {
-    srand(time(0));
+    srand(static_cast<unsigned int>(time(0)));
     int choice;
 
     while (true) {
         cout << "\n====================================\n"
              << "       CSMA CONSOLE SIMULATOR       \n"
              << "====================================\n"
-             << "1. Simulate CSMA/CD (Collision Detection)\n"
-             << "2. Simulate CSMA/CA (Collision Avoidance)\n"
-             << "3. View CSMA Persistence Methods\n"
+             << "1. Simulate Regular CSMA\n"
+             << "2. Simulate CSMA/CD (Collision Detection)\n"
+             << "3. Simulate CSMA/CA (Collision Avoidance)\n"
              << "4. Exit\n"
              << "Enter your choice (1-4): ";
 
         if (!(cin >> choice)) break;
 
-        if (choice == 1)      simulateCSMACD();
-        else if (choice == 2) simulateCSMACA();
-        else if (choice == 3) explainPersistence();
+        if (choice == 1)      simulateCSMA();
+        else if (choice == 2) simulateCSMACD();
+        else if (choice == 3) simulateCSMACA();
         else if (choice == 4) {
             cout << "\nExiting. Thank you!\n";
             break;
