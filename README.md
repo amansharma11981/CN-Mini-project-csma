@@ -1,60 +1,40 @@
-# CSMA, CSMA/CD, and CSMA/CA Protocol Simulator in C++
+# CSMA/CD & CSMA/CA Console Simulation
 
-An educational Computer Networks mini-project demonstrating **Carrier Sense Multiple Access (CSMA)** protocols in modern, beginner-friendly standard C++.
-
----
-
-## Project Structure
-
-This project contains two core files:
-- `csma_simulation.cpp` – Standalone C++ source code containing all three protocol simulations and interactive user configuration.
-- `README.md` – Documentation, theoretical principles, and usage instructions.
+A simple, readable single-file C++ console project demonstrating **Carrier Sense Multiple Access** protocols:
+1. **CSMA/CD** (*Collision Detection* — IEEE 802.3 Ethernet)
+2. **CSMA/CA** (*Collision Avoidance* — IEEE 802.11 Wi-Fi)
+3. **CSMA Persistence Methods** (1-Persistent, Non-Persistent, p-Persistent)
 
 ---
 
-## Features & User Control
+## Key Protocols Explained
 
-### 1. Pure CSMA (1-Persistent)
-- **Concept**: Sense medium; if idle, transmit immediately ($p = 1$). If busy, continuously listen and transmit immediately when free.
-- **User Control**: Number of competing stations ($2$ to $6$).
-- **Demonstration**: Shows how stations queueing up during a busy transmission collide as soon as the channel frees.
+### 1. CSMA/CD (Listen-While-Talk)
+- **Carrier Sensing**: Stations check if the shared bus is idle before transmitting.
+- **Collision Detection**: If two stations transmit simultaneously, both detect the collision.
+- **Jam Signal & Truncated Binary Exponential Backoff (BEB)**:
+  - Transmission is aborted immediately, and a jamming signal is emitted.
+  - Stations choose a random backoff:
+    $$R \in [0, 2^{\min(k, 10)} - 1]$$
+  - Stations wait $R$ slots before re-attempting transmission.
 
-### 2. CSMA/CD (Collision Detection — IEEE 802.3 Ethernet)
-- **Concept**: Listen-while-talk, instant transmission abortion, 32-bit Jam signal, and Truncated Binary Exponential Backoff ($R \in [0, 2^k - 1]$).
-- **User Control**: Number of contending stations ($2$ to $6$).
-- **Demonstration**: Shows simultaneous transmission, collision detection, jamming, and how backoff slots desynchronize nodes.
-
-### 3. CSMA/CA (Collision Avoidance — IEEE 802.11 Wi-Fi)
-- **Concept**: Avoid-before-talk, DIFS sensing, Contention Window backoff countdown, simplified RTS/CTS reservation, SIFS, and ACK confirmation.
-- **User Control**:
-  - Number of wireless stations ($2$ to $5$).
-  - Enable / Disable RTS/CTS reservation handshake ($1$ = Yes, $0$ = No).
-- **Demonstration**: Shows how small RTS/CTS frames protect large data frames from collision and address the hidden-terminal problem using NAV.
+### 2. CSMA/CA (Avoid-Before-Talk)
+- **Inter-Frame Spaces (DIFS / SIFS)**: Stations must sense the wireless medium idle for DIFS before countdown.
+- **Slotted Backoff Countdown**: Each station chooses a random backoff within Contention Window ($CW$).
+- **Timer Freezing**: When another station is transmitting, all other stations **freeze** their backoff countdown and resume only after the medium clears.
+- **Acknowledgements (ACK)**: Receiver returns an ACK frame after a SIFS duration. If no ACK is received (collision), $CW$ doubles.
 
 ---
 
 ## How to Compile & Run
 
-Compile with any standard C++ compiler:
-```bash
-g++ csma_simulation.cpp -o csma_sim
-./csma_sim
-```
-*(On Windows: `.\csma_sim.exe`)*
-
----
-
-## Interactive Menu Overview
-
-```text
-======================================================
-           CSMA / CD / CA CONSOLE SIMULATOR           
-======================================================
-1. Simulate Pure CSMA (1-Persistent)
-2. Simulate CSMA/CD (Collision Detection)
-3. Simulate CSMA/CA (Collision Avoidance & RTS/CTS)
-4. Exit
-Enter your choice [1-4] (default 1):
+### Using MinGW / GCC
+```cmd
+g++ main.cpp -o csma_sim.exe
+csma_sim.exe
 ```
 
-At any prompt, you can press **Enter** to accept the sensible default value or type a custom value to test different network conditions.
+Or run:
+```cmd
+build.bat
+```

@@ -1,8 +1,12 @@
-# Build artifacts
+# Compiled binaries and objects
 *.exe
-*.o
 *.obj
+*.o
+*.out
 
-# Editor & build directories
-.vscode/
-output/
+# Build directories
+build/
+bin/
+out/
+.vs/
+.cache/
